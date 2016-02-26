@@ -1,0 +1,38 @@
+*Training
+(UserId)
+(ItemId)
+(Result)
+(Unix-timestamp)
+// has repeated recommendations
+
+*User Profile
+Year-of-birth: 1990, 0-0-, 1-1- => normalize
+Gender: {0,1,2} 
+Number-of-tweet
+Tag-Ids: {tag1;tag2;tag3, 0} => tag1: {0,1}, tag2: {0,1}
+
+*Item
+ItemID
+Category: a.b.c.d 
+=> break into different levels
+=> a.b.c.d: {0,1}, b.c.d: {0,1}, c.d: {0,1}, d:{0,1}
+Keywords: {kw1;kw2;kw3} => kw1: {0,1}, kw2: {0,1}
+
+*user_sns
+follower_userid
+followee_userid
+=> follow_100044: {weight}, follow_100054: {weight}
+
+*user_action: “A   B     3     5     6”
+UserId
+Action-Destination-UserId
+Number-of-at-action
+Number-of-retweet
+Number-of-comment
+=> if (UserId == Action-Destination-UserId) not meaningful
+=> if ((UserId,Action-Destination-UserId) pair exists in user_sns) put more weight on follow_XXX
+
+*user_keywords
+UserID
+keywords:kw1:weight1;kw2:weight2;
+=> kw1: {weight1}, kw2: {weight2} 
