@@ -6,10 +6,10 @@
 // has repeated recommendations
 
 *User Profile
-Year-of-birth: 1990, 0-0-, 1-1- => normalize
-Gender: {0,1,2} 
-Number-of-tweet
-Tag-Ids: {tag1;tag2;tag3, 0} => tag1: {0,1}, tag2: {0,1}
+Year-of-birth: 1990, 0-0-, 1-1- => normalize        //remove as feature for clustering, liars, invalid input
+Gender: {0,1,2} 									//remove as feature for clustering, but same as above, use in postpr
+Number-of-tweet 									//remove as feature for clustering, but use as postpro for activeness	
+Tag-Ids: {tag1;tag2;tag3, 0} => tag1: {0,1}, tag2: {0,1}	//skip for now, very sparse 
 
 *Item
 ItemID
@@ -36,3 +36,21 @@ Number-of-comment
 UserID
 keywords:kw1:weight1;kw2:weight2;
 => kw1: {weight1}, kw2: {weight2} 
+
+
+---------------------------------------------------------
+
+Feature selection:
+Two users are seen as similar if: 
+	- activies are similar: word choice, follow behavior
+	- They both show high positive interest in a destination user-id(number of actions towards same dest user of which both follow)
+
+Users are likely to follow items who are:
+ 	- followed by other similar users
+ 	- similar to other items the user follows (items under same category, with same keywords)
+ 
+Users are more likely to follow than not:
+	- if the user follows many many different items
+	- if the user follows most recommendations as seen in training
+
+User Profile - tag-ids in form 

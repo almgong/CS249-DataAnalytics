@@ -21,9 +21,12 @@ data = [
 print "Preprocessing..."
 f = Dataformatter.generateUserDict("data/user_profile.txt", 
 	"data/item.txt",
-	"data/user_sns.txt")
+	"data/user_sns.txt",
+	"data/user_key_word.txt")
 
 t = Trends.numFollowersBasedOnBirthYear(f)
+t = Trends.numDistinctTagIds(f)
+t = Trends.numDistinctKeywords(f)
 
 ### Run main algorithm ###
 #lrm = LogisticRegressionWithLBFGS.train(sc.parallelize(data), iterations=10)

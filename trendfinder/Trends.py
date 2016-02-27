@@ -44,4 +44,30 @@ def numFollowersBasedOnBirthYear(data):	#should probably do more than counting o
 	print "Average follows - Age (20-30): ", ageRanges[30]['count']*1.0/ageRanges[30]['numUsers'] 
 	print "Average follows - Age (30+): ", ageRanges[-1]['count']*1.0/ageRanges[-1]['numUsers']  
 
-	
+def numDistinctTagIds(data):
+	'''Return num of distinct tag ids in user profile'''
+
+	temp = {}
+	maximum = -1
+	for user in data:
+		taglist = data[user]['user_data'][-1].split(";")
+		if(len(taglist) > 1):
+			for tag in taglist:
+				if(int(tag)> maximum):
+					maximum = int(tag)
+				temp[tag] = 0
+
+	print "num ", len(temp)
+	return maximum
+
+def numDistinctKeywords(data):
+	'''return num of distinct keywords for users'''
+	temp = {}
+	for user in data:
+		keywords = data[user]['keywords'].split(";")
+		for kw in keywords:
+			curr = kw.split(':')[0] #keyword without weight
+			temp[curr] = 0
+
+	return len(temp)
+

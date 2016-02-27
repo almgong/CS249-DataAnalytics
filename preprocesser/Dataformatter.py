@@ -35,12 +35,20 @@ def readInSNS(filename, arr):
 			arr[curr[0]]['follows'].append(curr[1])
 
 
+def readInUserKeyword(filename, arr):
+	'''Reads User keyword data, depends on readInUserProfile()'''
 
-def generateUserDict(userFileLoc, itemFileLoc, snsLoc):
+	with open(filename) as f:
+		for line in f:
+			curr = line.split()
+			arr[curr[0]]['keywords'] = curr[1]
+
+def generateUserDict(userFileLoc, itemFileLoc, snsLoc, kwLoc):
 	'''Generates and returns a data structure to hold user/item information'''
 
 	arr = {}
 	readInUserProfile(userFileLoc, arr)
 	readInItem(itemFileLoc, arr)
 	readInSNS(snsLoc, arr)
+	readInUserKeyword(kwLoc, arr)
 	return arr
