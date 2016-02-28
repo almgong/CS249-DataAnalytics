@@ -4,6 +4,7 @@ from pyspark.mllib.regression import LabeledPoint
 ###preprocess###
 from preprocesser import Dataformatter
 from trendfinder import Trends 
+import time
 
 '''
 Main driver for CS249 classification problem.
@@ -19,11 +20,16 @@ data = [
 
 ### Run preprocessing ###
 print "Preprocessing..."
-f = Dataformatter.generateUserDict("data/user_profile.txt", 
+start = time.time()
+userDict = {}
+userFV = {} 	#feature vectors per user
+Dataformatter.parseKDDData(userDict,
+	userFV, 
+	"data/user_profile.txt", 
 	"data/item.txt",
 	"data/user_sns.txt",
 	"data/user_key_word.txt")
-
+print "took:%s seconds"%(time.time()-start)
 t = Trends.numFollowersBasedOnBirthYear(f)
 t = Trends.numDistinctTagIds(f)
 t = Trends.numDistinctKeywords(f)

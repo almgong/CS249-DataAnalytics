@@ -3,7 +3,7 @@
 (ItemId)
 (Result)
 (Unix-timestamp)
-// has repeated recommendations
+// has repeated recommendations (same user-item pair, diff timestamp)
 
 *User Profile
 Year-of-birth: 1990, 0-0-, 1-1- => normalize        //remove as feature for clustering, liars, invalid input
