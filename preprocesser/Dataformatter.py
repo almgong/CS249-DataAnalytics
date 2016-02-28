@@ -78,16 +78,17 @@ def parseKDDData(userDict, userFV, userFileLoc, itemFileLoc, snsLoc, kwLoc):
 	readInUserKeyword(kwLoc, userDict, uniqueKW)
 
 	### creating feature vectors for each user
-	sortedKWVector = uniqueKW.keys().sort()
+	sortedKWVector = uniqueKW.keys()
+	sortedKWVector.sort()
 	sKWVLen = len(sortedKWVector)
 
-	sortedTagVector = uniqueTags.keys().sort()
+	sortedTagVector = uniqueTags.keys()
+	sortedTagVector.sort()
+	sTVLen = len(sortedTagVector)
 
 	countSkipped = 0
 	for user in userDict:
-		if (not 'keywords' in userDict[user] && 
-			not 'itemKeywords' in userDict[user] %%
-			not userDict[user]['tagIds']=='0'):
+		if ((not 'keywords' in userDict[user]) and (not 'itemKeywords' in userDict[user]) and (not userDict[user]['tagIds']=='0')):
 
 			countSkipped+=1
 			continue #skip because not enough information
@@ -95,12 +96,15 @@ def parseKDDData(userDict, userFV, userFileLoc, itemFileLoc, snsLoc, kwLoc):
 		userFV[user] = [] 
 		keysVisited = 0 	#number of keys visited in the sortedKWVector
 
+		currKeywords = userDict[user]['keywords']
+		if 'itemKeywords' in userDict[user]:
+				 iKWs = userDict[user]['itemKeywords'].split(';')
+				 for iKW in iKWs:
+				 	if not iKW in currKeywords:
+				 		currKeywords[iKW] = 1
+		visitsLeft = len(currKeywords) #max number of visits/checks we need on user keyword
 		#generate keyword part of FV
 		for uKW in sortedKWVector:
-			currKeywords = userDict[user]['keywords']
-			if 'itemKeywords' in userDict[user]:
-				 
-			visitsLeft = len(currKeywords)				#max number of visits/checks we need on user keyword
 			keysVisited+=1			
 
 			if uKW in currKeywords: 	#if the user has this keyword
@@ -109,18 +113,29 @@ def parseKDDData(userDict, userFV, userFileLoc, itemFileLoc, snsLoc, kwLoc):
 			else:
 				userFV[user].append(0)
 
-
-
-
 			### early termination of current user if all possible keywords marked
 			if visitsLeft == 0:
 				filler = [0 for i in range(sKWVLen - keysVisited)]
 				userFV[user] + filler
 				break
-
-
-
-			
-
+		currTags = userDict[user]['tagIds'].split(';')
+		visitsLeft = len(currTags)
+		keysVisited = 0
+		for uTag in sortedTagVector:
+			keysVisited += 1
+			if currTags[0] == '0':
+				filler = [0 for i in range(sTVLen)]
+				userFV[user] + filler
+				break
+			if uTag in currTags:
+				userFV[user].append(1)
+				visitsLeft -= 1
+			else:
+				userFV[user].append(0)
+			if visitsLeft == 0:
+				filler = [0 for i in range(sTVLen - keysVisited)]
+				userFV[user] + filler
+				break
 
 	print len(uniqueKW)
+	print len(uniqueTags)
