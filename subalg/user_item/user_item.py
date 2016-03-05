@@ -1,3 +1,3 @@
-def generateCandidatesWithWeights(sparkContext):
+def generateCandidatesWithWeights(sc):
 	'''Hello World'''
 	pass
