@@ -7,6 +7,9 @@ from pyspark.mllib.linalg import SparseVector
 #from preprocesser import Dataformatter
 #from trendfinder import Trends 
 
+from subalg.item_item import  *
+from subalg.user_user import *
+
 '''
 Main driver for CS249 classification problem.
 Designed to run in the interactive pyspark shell.
