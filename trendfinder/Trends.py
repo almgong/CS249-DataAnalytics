@@ -1,3 +1,5 @@
+'''Deprecated, no longer used'''
+
 '''
 Module that generates trends and statistics based on input (format of input)
 based on the return(s) of Dataformatter.py functions.
