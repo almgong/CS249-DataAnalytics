@@ -11,13 +11,14 @@ from subalg.item_item import item_item
 from subalg.user_item import user_item
 from subalg.user_user import *
 
+import gc
+
 '''
 Main driver for CS249 classification problem.
 Designed to run in the interactive pyspark shell.
 '''
 
 ### Run preprocessing ### NOT USED
-print "Preprocessing..."
 '''
 userDict = {}
 userFV = {} 	#feature vectors per user
@@ -49,9 +50,11 @@ t = Trends.numDistinctKeywords(f)"""
 '''
 
 
+################################## new ################################
+
 
 ### Any preprocessing needed (may be none)
-print "Preprocessing - Preparing data"
+print "Preprocessing..."
 
 
 
@@ -59,8 +62,10 @@ print "Preprocessing - Preparing data"
 print "Runing main logic"
 
 results_user_item = user_item.generateCandidatesWithWeights(sc)
-results_item_item = item_item.generateCandidatesWithWeights(sc) #pass in sc
 
+print "\nStarting item-item logic"
+results_item_item = item_item.generateCandidatesWithWeights(sc) #pass in sc
+gc.collect()
 
 ### Postprocessing - may be none ###
 print "Postprocessing - Cleaning up"
