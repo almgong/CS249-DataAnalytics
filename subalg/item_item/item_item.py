@@ -117,7 +117,12 @@ def applyUserActionWeights(sim10List, numActionsOnSimilarItem):
 	return ret
 
 def generateCandidatesWithWeights(sparkContext):
-	'''Wrapper function for generating candidates'''
+	'''
+	Wrapper function for generating candidates
+
+	Notes: for items without other items in the same cat, no value is outputted.
+	Only users who follow items are considered (users are drawn form user_sns).
+	'''
 
 	#use of globals, need to explicitly state since we will None them later
 	global categoryIndex 
@@ -146,6 +151,11 @@ def generateCandidatesWithWeights(sparkContext):
 	for item in itemIndex:
 		#first lets look only at items within the same category
 		sameCatItems = categoryIndex[itemIndex[item]['category']]
+
+		#if there are no items within the same cat, skip
+		if not len(sameCatItems):
+			sharedKeywordsIndex[item] ={}
+			continue
 
 		#for each item in the same category, compute the proportion of shared keywords - store in sharedKeywordsIndex
 		for itemWithSameCat in sameCatItems:
@@ -189,31 +199,39 @@ def generateCandidatesWithWeights(sparkContext):
 
 	print "Finished with user_action preprocessing..."
 	print "Generating final return, total runtime so far: %s..."%(time.time()-start)
-
+	countSkipped = 0
 	#apply weights to sharedKeywordsIndex based on number of user actions (simply multiplying)
-	for user in userActionIndex:
-		followsSorted = sorted(userActionIndex[user].items(),
-			key=lambda x: x[1], reverse=True)
-		followsSorted = followsSorted[:10]	#only look up to top 10 interest items
 
-		#for each tuple, get 10 most similar items, and apply interest weight to get rating
-		for tup in followsSorted:
-			tenMostSimilar = sharedKeywordsIndex[tup[0]]
-			top10WithRatings = applyUserActionWeights(tenMostSimilar, tup[1])
-			
-			#now we have a "chunk" of 10 item recommendtions, merge with result
-			#resultIndex = mergeDictionaries(resultIndex, top10WithRatings)
+	with open(currDir+"/output/item_item_results.txt", 'a+') as f:
+		for user in userActionIndex:
+			followsSorted = sorted(userActionIndex[user].items(),
+				key=lambda x: x[1], reverse=True)
+			followsSorted = followsSorted[:2]	#only look up to top 2 interested items, limits return to up to 20 per user
 
-			with open(currDir+"/output/item_item_results.txt", 'a+') as f:
+			#for each tuple, get 10 most similar items, and apply interest weight to get rating
+			for tup in followsSorted:
+				if not tup[0] in sharedKeywordsIndex:
+					countSkipped+=1
+					continue
+
+				tenMostSimilar = sharedKeywordsIndex[tup[0]]
+				top10WithRatings = applyUserActionWeights(tenMostSimilar, tup[1])
+				
+				#now we have a "chunk" of 10 item recommendtions, merge with result
+				#resultIndex = mergeDictionaries(resultIndex, top10WithRatings)
+
+				#instead of merging and storing in memory, write results to disk
 				for item in top10WithRatings:
 					f.write(user+" "+item+" "+str(top10WithRatings[item])+"\n")
 
 
 
+	print "Finished writing, clearing up some memory..."
 	#free memory!!
 	sharedKeywordsIndex = None
 	userActionIndex = None 	
 	gc.collect()			
 
+	print "Skipped %s items - no other items in same category"%(countSkipped)
 	print "Total runtime: %s sec"%(time.time() - start)
 	return resultIndex
