@@ -1,18 +1,15 @@
-from pyspark.mllib.classification import LogisticRegressionWithLBFGS, LogisticRegressionModel
-from pyspark.mllib.regression import LabeledPoint
-from pyspark.mllib.clustering import *
-from pyspark.mllib.linalg import SparseVector
-
 ###preprocess###
 #from preprocesser import Dataformatter
 #from trendfinder import Trends 
 
 # from subalg.user_user import user_user
 from subalg.item_item import item_item
-# from subalg.user_item import user_item
-# from subalg.user_user import *
+from subalg.user_item import user_item
+from subalg.user_user import *
+from logistic_regression import lr
 
 import gc
+import os #for deleting temp files
 
 '''
 Main driver for CS249 classification problem.
@@ -69,14 +66,21 @@ gc.collect()
 results_user_item = user_item.generateCandidatesWithWeights(sc)
 
 print "\nStarting item-item logic"
-results_item_item = item_item.generateCandidatesWithWeights(sc) #pass in sc
+item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
 gc.collect()
+
+print "\n\nDone processing data, begin Logistic Regression..."
+lr.runLogisticRegression(sc)
 
 ### Postprocessing - may be none ###
 print "Postprocessing - Cleaning up"
+try:
+	os.remove('subalg/item_item/output/item_item_result.txt')
 
+except:
+	print "Something went wrong with removing temporary files, you may need to manually delete them."
 
-
+print "Exiting spark..."
 
 
 

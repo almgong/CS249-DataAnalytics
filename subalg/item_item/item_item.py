@@ -21,8 +21,6 @@ sharedKeywordsIndex = {} 	#{itemID:{itemID2:value,...},... }
 
 userActionIndex = {}	#{userID:{itemID:numActionsToThisItem, ...},...}
 
-resultIndex = {}	#{userID:{itemID:value}} //FINAL RESULTS!
-
 ### Mapping functions for preprocessing data ###
 def mapLineToItemIndexes(line):
 	'''Given a line from item.txt, store to appropriate indexes'''
@@ -234,4 +232,3 @@ def generateCandidatesWithWeights(sparkContext):
 
 	print "Skipped %s items - no other items in same category"%(countSkipped)
 	print "Total runtime: %s sec"%(time.time() - start)
-	return resultIndex
