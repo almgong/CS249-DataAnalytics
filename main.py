@@ -7,9 +7,10 @@ from pyspark.mllib.linalg import SparseVector
 #from preprocesser import Dataformatter
 #from trendfinder import Trends 
 
+# from subalg.user_user import user_user
 from subalg.item_item import item_item
-from subalg.user_item import user_item
-from subalg.user_user import *
+# from subalg.user_item import user_item
+# from subalg.user_user import *
 
 import gc
 
@@ -60,6 +61,10 @@ print "Preprocessing..."
 
 ### Main logic, run 3 sub algorithms ###
 print "Runing main logic"
+
+print "\nStarting user-user logic"
+user_user.generateCandidatesWithWeights()
+gc.collect()
 
 results_user_item = user_item.generateCandidatesWithWeights(sc)
 
