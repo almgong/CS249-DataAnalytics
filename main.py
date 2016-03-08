@@ -2,10 +2,9 @@
 #from preprocesser import Dataformatter
 #from trendfinder import Trends 
 
-# from subalg.user_user import user_user
+from subalg.user_user import user_user
 from subalg.item_item import item_item
 from subalg.user_item import user_item
-from subalg.user_user import *
 from logistic_regression import lr
 
 import gc
@@ -66,13 +65,13 @@ gc.collect()
 results_user_item = user_item.generateCandidatesWithWeights(sc)
 
 print "\nStarting item-item logic"
-item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
+#item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
 gc.collect()
 
 print "\n\nDone processing data, begin Logistic Regression..."
-lr.runLogisticRegression(sc)
+#lr.runLogisticRegression(sc)
 
-### Postprocessing - may be none ###
+### Postprocessing - Mainly should be to delete files created on disk ###
 print "Postprocessing - Cleaning up"
 try:
 	os.remove('subalg/item_item/output/item_item_result.txt')
