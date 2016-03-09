@@ -114,12 +114,28 @@ def applyUserActionWeights(sim10List, numActionsOnSimilarItem):
 
 	return ret
 
-def generateCandidatesWithWeights(sparkContext):
+def filterAlreadyFollowed(user, items):
+	'''
+	Given the input dictionary, filter out the items that are already 
+	followed by this user 
+	'''
+	toRemove = []
+	for item in items:
+		if item in userActionIndex[user]:	#if user already follows this item
+			toRemove.append(item)
+
+	for item in toRemove:
+		del items[item]
+
+def generateCandidatesWithWeights(sc):
 	'''
 	Wrapper function for generating candidates
 
 	Notes: for items without other items in the same cat, no value is outputted.
 	Only users who follow items are considered (users are drawn form user_sns).
+	Also, only those users who actually perform some action towards a followed
+	item are considered, roughly 1 million users are outputted with some 
+	recommendations - this is the biggest filtering that occurs for item-item.
 	'''
 
 	#use of globals, need to explicitly state since we will None them later
@@ -131,10 +147,6 @@ def generateCandidatesWithWeights(sparkContext):
 	global resultIndex
 
 	start = time.time()
-
-	sc = sparkContext						#abbreviation for easier use
-	'''itemFile = sc.textFile(itemLoc)			#open item file
-	itemFile.foreach(mapLineToItemIndexes)	#preprocess..., count is a dummy action call''' #lazy eval sucks
 
 	#proactively open file and index what we need
 	print "Opening item.txt file..."
@@ -198,14 +210,15 @@ def generateCandidatesWithWeights(sparkContext):
 	print "Finished with user_action preprocessing..."
 	print "Generating final return, total runtime so far: %s..."%(time.time()-start)
 	countSkipped = 0
-	#apply weights to sharedKeywordsIndex based on number of user actions (simply multiplying)
 
+	#apply weights to sharedKeywordsIndex based on number of user actions (simply multiplying)
 	with open(currDir+"/output/item_item_results.txt", 'a+') as f:
 		for user in userActionIndex:
 			followsSorted = sorted(userActionIndex[user].items(),
 				key=lambda x: x[1], reverse=True)
 			followsSorted = followsSorted[:2]	#only look up to top 2 interested items, limits return to up to 20 per user
-
+			if not len(followsSorted):
+				countSkipped+=1
 			#for each tuple, get 10 most similar items, and apply interest weight to get rating
 			for tup in followsSorted:
 				if not tup[0] in sharedKeywordsIndex:
@@ -214,11 +227,12 @@ def generateCandidatesWithWeights(sparkContext):
 
 				tenMostSimilar = sharedKeywordsIndex[tup[0]]
 				top10WithRatings = applyUserActionWeights(tenMostSimilar, tup[1])
-				
-				#now we have a "chunk" of 10 item recommendtions, merge with result
-				#resultIndex = mergeDictionaries(resultIndex, top10WithRatings)
+				filterAlreadyFollowed(user, top10WithRatings)
 
 				#instead of merging and storing in memory, write results to disk
+				if not len(top10WithRatings):
+					countSkipped+=1
+
 				for item in top10WithRatings:
 					f.write(user+" "+item+" "+str(top10WithRatings[item])+"\n")
 
@@ -230,5 +244,5 @@ def generateCandidatesWithWeights(sparkContext):
 	userActionIndex = None 	
 	gc.collect()			
 
-	print "Skipped %s items - no other items in same category"%(countSkipped)
+	print "Skipped %s items - no other items in same category or no actions"%(countSkipped)
 	print "Total runtime: %s sec"%(time.time() - start)
