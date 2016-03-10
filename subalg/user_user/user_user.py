@@ -16,8 +16,9 @@ currDir = "subalg/user_user"
 
 ### Indexes used in logic, please dereference after usage! ###
 userIndex = {} #{userID: {keywords:[], tagIds:[], follow:[list of itemIds]},... }
-followedByIndex = {} #{userID1: [list of userIds that follows userID1] }
+# followedByIndex = {} #{userID1: [list of userIds that follows userID1] }
 userSharedIndex = {}#{userID: {userID2: value, userID3: value,...},...}
+keywordIndex = {} #{keyword: [list of userIds],...}
 
 ### Mapping functions for preprocessing data ###
 def mapLineToUserIndexesFromProfile(line):
@@ -48,10 +49,10 @@ def mapLineToUserIndexesFromSns(line):
 			'keywords': []
 		}
 
-	if follows in followedByIndex:
-		followedByIndex[follows].append(userID)
-	else:
-		followedByIndex[follows] = [userID]
+	# if follows in followedByIndex:
+	# 	followedByIndex[follows].append(userID)
+	# else:
+	# 	followedByIndex[follows] = [userID]
 
 def mapLineToUserIndexesFromKeywords(line):
 	'''Given a line from user_key_word.txt, store to userIndex, depends on mapLineToUserIndexesFromSns to have been ran first'''
@@ -62,7 +63,10 @@ def mapLineToUserIndexesFromKeywords(line):
 		keywords = line[1].split(";") #[list of "keywordID:weights"]
 		for kw in keywords:
 			k = kw.split(":")[0]
+			if not keywordIndex.has_key(k):
+				keywordIndex[k] = []
 			userIndex[userID]['keywords'].append(k)
+			keywordIndex[k].append(userID)
 
 def getNumOrPropShared(list1, list2, returnNum=False):
 	'''
@@ -95,6 +99,7 @@ def generateCandidatesWithWeights():
 	global userIndex
 	global followedByIndex
 	global userSharedIndex
+	global keywordIndex
 	
 	start = time.time()
 	
@@ -119,7 +124,7 @@ def generateCandidatesWithWeights():
 	print "Done with reading file and generating indexes..."
 
 	print "Length of UserIndex: " + str(len(userIndex))
-	print "Length of followedByIndex: " + str(len(followedByIndex))
+	print "Length of keywordIndex: " + str(len(keywordIndex))
 	# Length of UserIndex: 1892059
 	# Length of followedByIndex: 920110
 
@@ -130,60 +135,113 @@ def generateCandidatesWithWeights():
 	#for each user, generate a list of candidate userIds to compute similarities
 	count = 0
 	for user in userIndex:
-		if (count % 5) == 0:
-			print "Processing number " + str(count)
+		if (count % 50) == 0:
 			print "Already took %s secs"%(time.time()-start)
+		print "Processing number " + str(count)
+		print str(len(userIndex) - count) + " to go!!"
 		count += 1
 		
 		userSharedIndex[user] = {}
-		userSharedEntry = {} # {userID: {sharedTags: 1, sharedKeywords: 2, sharedFollows:5},...}
+		# userSharedEntry = {} # {userID: {sharedTags: 1, sharedKeywords: 2, sharedFollows:5},...}
 		tags = userIndex[user]['tagIds']
 		follows = userIndex[user]['follows']
 		keywords = userIndex[user]['keywords']
+		if len(keywords) == 0:
+			continue
+		if len(tags) == 0:
+			continue
+		if len(follows) == 0:
+			continue
+
+		usersSkippedByKeywords = 0
+		usersSkippedByTags = 0
+		# try filter by keywords
+		if not keywords == []:
+			innerCount = 0
+			for keyword in keywords:
+				print "key " + str(innerCount) + " = " + str(len(keywordIndex[keyword]))
+				innerCount += 1
+				for userWithSameKeyword in keywordIndex[keyword]: #list of users that share this keyword
+					if user == userWithSameKeyword:
+						continue
+					if userWithSameKeyword not in userIndex:
+						continue
+					if userWithSameKeyword in userSharedIndex[user]:
+						continue
+
+					keywordValue = getNumOrPropShared(keywords,userIndex[userWithSameKeyword]['keywords'])
+					if keywordValue < .2: #ignore the users that shared less than .2
+						usersSkippedByKeywords += 1
+						continue
+					
+					tagValue = getNumOrPropShared(tags,userIndex[userWithSameKeyword]['tagIds'])
+					if tagValue < .2: #ignore the users that shared less than .2
+						usersSkippedByTags += 1
+						continue
+
+					followValue = getNumOrPropShared(follows,userIndex[userWithSameKeyword]['follows'])
+
+					value = .25*keywordValue + .25*tagValue + .5*followValue
+					userSharedIndex[user][userWithSameKeyword] = value
 
 		# First, look at user that share same followers
-		if not follows == []:
-			for follow in follows:
-				for userWithSameFollows in followedByIndex[follow]: #list of users that follows this item
-					if userWithSameFollows not in userIndex:
-						continue
-					if user == userWithSameFollows:
-						continue
-					if userWithSameFollows in userSharedIndex[user]:
-						continue
+		# if not follows == []:
+		# 	for follow in follows:
+		# 		# print len(followedByIndex[follow])
+		# 		for userWithSameFollows in followedByIndex[follow]: #list of users that follows this item
+		# 			if userWithSameFollows not in userIndex:
+		# 				continue
+		# 			if user == userWithSameFollows:
+		# 				continue
+		# 			if userWithSameFollows in userSharedIndex[user]:
+		# 				continue
+		# 			if len(follows) == 0:
+		# 				followValue = 0
+		# 			else:
+		# 				followValue = getNumOrPropShared(follows,userIndex[userWithSameFollows]['follows'])
+		# 			if followValue < .5:
+		# 				continue
 					
-					if len(keywords) == 0:
-						keywordValue = 0
-					else:
-						keywordValue = getNumOrPropShared(keywords,userIndex[userWithSameFollows]['keywords'])
+		# 			if len(keywords) == 0:
+		# 				keywordValue = 0
+		# 			else:
+		# 				keywordValue = getNumOrPropShared(keywords,userIndex[userWithSameFollows]['keywords'])
 					
-					if len(tags) == 0:
-						tagValue = 0
-					else:
-						tagValue = getNumOrPropShared(tags,userIndex[userWithSameFollows]['tagIds'])					
+		# 			if len(tags) == 0:
+		# 				tagValue = 0
+		# 			else:
+		# 				tagValue = getNumOrPropShared(tags,userIndex[userWithSameFollows]['tagIds'])					
 					
-					if len(follows) == 0:
-						followValue = 0
-					else:
-						followValue = getNumOrPropShared(follows,userIndex[userWithSameFollows]['follows'])
-					value = .25*tagValue + .25*keywordValue + .5*followValue
-					userSharedIndex[user][userWithSameFollows] = value
-		
+		# 			# if len(follows) == 0:
+		# 			# 	followValue = 0
+		# 			# else:
+		# 			# 	followValue = getNumOrPropShared(follows,userIndex[userWithSameFollows]['follows'])
+		# 			value = .25*tagValue + .25*keywordValue + .5*followValue
+		# 			userSharedIndex[user][userWithSameFollows] = value
+		print "Finished generating an user, Length of shared users " + str(len(userSharedIndex[user])) + " for " + str(user)
 		# sort each resultant entry in userSharedIndex, limit to up to top 50 for memory efficiency
 		userSharedIndex[user] =  sorted(userSharedIndex[user].items(),
 				key=lambda x: x[1], reverse=True)[:20]
-
-	# print userSharedIndex
+		print "Finished sorting for " + str(user)
+	
 	print "Finished Candidate Generation, took %s secs"%(time.time()-start)
+	print "Skipped because of keywords: " + str(usersSkippedByKeywords)
+	print "Skipped because of tags: " + str(usersSkippedByTags)
+	print "Length of userSharedIndex: " + str(len(userSharedIndex))
 
 	#Can now free some memory - recall global statement above
-	followedByIndex = None
+	keywordIndex = None
+	# followedByIndex = None
 	gc.collect()
 
 	# generate the items from similar users for frequent pattern mining
 	print "Start writing to result file"
 	with open(currDir+"/output/user_user_results.txt", 'w') as f:
+		count = 0
 		for user in userSharedIndex:
+			if (count % 100) == 0:
+				print "Processing number " + str(count)
+			count += 1
 			itemList = {} 
 			userFollowedItems = userIndex[user]['follows']
 			for similarUser in userSharedIndex[user]:
@@ -210,4 +268,4 @@ def generateCandidatesWithWeights():
 	print "Total runtime: %s sec"%(time.time() - start)
 
 # run
-# generateCandidatesWithWeights()
+generateCandidatesWithWeights()
