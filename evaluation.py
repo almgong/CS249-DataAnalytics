@@ -18,7 +18,7 @@ def precision_compute(stat, aver_precision):
                     
     if sum[-1] > 0:
         aver_precision[0] += top_prec / sum[-1]   # the sum of precision
-        print top_prec / sum[-1]
+        #print top_prec / sum[-1]
     
 def readRecom(filename, user):
     with open(filename) as f:
