@@ -7,6 +7,7 @@ from pyspark.mllib.linalg import SparseVector
 Module that we will use as an API to run spark's LR algorithm
 '''
 
+userUserLoc = 'subalg/user_user/'
 itemItemLoc = 'subalg/item_item/output/item_item_results.txt'	#relative to sc
 
 def parsePoint(line):
@@ -19,9 +20,9 @@ def runLogisticRegression(sc):
 	'''Wrapper function that formats output of subalgs to run LR'''
 
 	#open all output files and generate in memory dictionary with .1's filled in for missing intersects
+	#with open...
 
-
-	#write resultant dictionary to final output file
+	#write resultant dictionary to final output file to pass into logistic regression
 
 
 	#open final output file and run logistic regression
@@ -30,3 +31,5 @@ def runLogisticRegression(sc):
 
 	#build the LR LogisticRegressionModel
 	model = LogisticRegressionWithLBFGS.train(itemItemData)
+
+	#get weights of this model, and then apply to in memory dictionary to get final recommendations to pass to evaluation
