@@ -12,7 +12,7 @@ Module that we will use as an API to run spark's LR algorithm
 userUserLoc = 'subalg/user_user/output/user_user_results.txt'
 itemItemLoc = 'subalg/item_item/output/item_item_results.txt'
 userItemLoc = 'subalg/user_item/output/user_item_results.txt'
-trainingLoc = 'data/training_data.txt'	#relative to sc
+trainingLoc = 'data/train2.txt'	#relative to sc
 # trainingLoc = 'data/rec_log_train.txt'
 testLoc = 'data/rec_log_test.txt'
 currDir = 'logistic_regression'
@@ -95,10 +95,11 @@ def runLogisticRegression(sc):
 	print "open file 3"
 	with open(userItemLoc) as f:
 		for line in f:
-			line = line.split()
+			line = line.strip('(')
+			line = line.split(',')
 			user = line[0]
 			item = line[1]
-			rating = line[2]
+			rating = line[2].split(')')[0]
 			if not user in userItemIndex: # this user does not appears before
 				userItemIndex[user] = {}
 				userItemIndex[user][item] = {
