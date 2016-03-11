@@ -37,7 +37,6 @@ def readSolution(filename, user):
             curr = line.split(',')
             click_item = curr[1].split()   # obtain the list of click item
             
-            
             if curr[0] in user:
                 for ele in set(user[curr[0]]['recommendation']) & set(click_item):
                     user[curr[0]]['stat'][user[curr[0]]['recommendation'].index(ele)] = 1
@@ -59,5 +58,3 @@ def evaluation(filename1, filename2):   # wrapped function \
     stat_compute(user, aver_precision)
     return aver_precision[0] / aver_precision[1]
         
-
-print evaluation('recom.txt', 'solu.txt')

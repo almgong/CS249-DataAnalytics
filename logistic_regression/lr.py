@@ -9,17 +9,20 @@ import gc
 Module that we will use as an API to run spark's LR algorithm
 '''
 
-# userUserLoc = 'subalg/user_user/'
-# userUserLoc = 'subalg/item_item/output/item_item_result_2.txt'
-# itemItemLoc = 'subalg/item_item/output/item_item_results.txt'
-# trainingLoc = 'data/rec_log_train.txt'	#relative to sc
-# currDir = 'logistic_regression'
+userUserLoc = 'subalg/user_user/output/user_user_results.txt'
+itemItemLoc = 'subalg/item_item/output/item_item_results.txt'
+userItemLoc = 'subalg/user_item/output/user_item_results.txt'
+trainingLoc = 'data/training_data.txt'	#relative to sc
+# trainingLoc = 'data/rec_log_train.txt'
+testLoc = 'data/rec_log_test.txt'
+currDir = 'logistic_regression'
 
 # toy data
-userUserLoc = 'data/toy/item_item_toy.txt'
-itemItemLoc = 'data/toy/item_item_toy_1.txt'
-trainingLoc = 'data/toy/rec_log_train_100000.txt'	#relative to sc
-currDir = 'logistic_regression'
+# userUserLoc = 'data/toy/item_item_toy.txt'
+# itemItemLoc = 'data/toy/item_item_toy_1.txt'
+# userItemLoc = 'data/toy/item_item_toy_2.txt'
+# trainingLoc = 'data/toy/rec_log_train_100000.txt'	#relative to sc
+# currDir = 'logistic_regression'
 
 userItemIndex = {} # user: {item: [ratings]}
 def parsePoint(line):
@@ -29,7 +32,7 @@ def parsePoint(line):
 	# return LabeledPoint(1, values)	#for now, label all as 1
 	return LabeledPoint(values[0], values[1:])
 
-def runLogisticRegression():
+def runLogisticRegression(sc):
 	'''Wrapper function that formats output of subalgs to run LR'''
 	global userItemIndex
 	start = time.time()
@@ -48,15 +51,15 @@ def runLogisticRegression():
 				userItemIndex[user][item] = {
 					0: -1, #for label
 					1: rating,
-					2: 0.1,
-					3: 0.1
+					2: 0,
+					3: 0
 				}
 			else:
 				userItemIndex[user][item] = {
 					0: -1, #for label
 					1: rating,
-					2: 0.1,
-					3: 0.1
+					2: 0,
+					3: 0
 				}
 	print "Done with file 1"
 	print "Total runtime: %s sec"%(time.time() - start)
@@ -68,45 +71,78 @@ def runLogisticRegression():
 			user = line[0]
 			item = line[1]
 			rating = line[2]
-			if not user in userItemIndex: # this user does not appears in sub1
+			if not user in userItemIndex: # this user does not appears before
 				userItemIndex[user] = {}
 				userItemIndex[user][item] = {
 					0: -1, #for label
-					1: 0.1,
+					1: 0,
 					2: rating,
-					# 3: 0.1
+					3: 0
 				}
-			elif not item in userItemIndex[user]: # this user-item pair does not appear in sub1
+			elif not item in userItemIndex[user]: # this user-item pair does not appear before
 				userItemIndex[user][item] = {
 					0: -1, #for label
-					1: 0.1,
+					1: 0,
 					2: rating,
-					# 3: 0.1
+					3: 0
 				}
 			else: # this user-item pair appears in sub1
 				userItemIndex[user][item][2] = rating
 	print "Done with file 2"
 	print "Total runtime: %s sec"%(time.time() - start)
 	f.close()
+
+	print "open file 3"
+	with open(userItemLoc) as f:
+		for line in f:
+			line = line.split()
+			user = line[0]
+			item = line[1]
+			rating = line[2]
+			if not user in userItemIndex: # this user does not appears before
+				userItemIndex[user] = {}
+				userItemIndex[user][item] = {
+					0: -1, #for label
+					1: 0,
+					2: 0,
+					3: rating
+				}
+			elif not item in userItemIndex[user]: # this user-item pair does not appear before
+				userItemIndex[user][item] = {
+					0: -1, #for label
+					1: 0,
+					2: 0,
+					3: rating
+				}
+			else: # this user-item pair appears in sub1
+				userItemIndex[user][item][3] = rating
+	print "Done with file 3"
+	print "Total runtime: %s sec"%(time.time() - start)
+	print "Length of userItemIndex = " + str(len(userItemIndex)) #1,816,664
+	f.close()	
 	
 	# open training file
 	print "Open training file"
+	userInTrainingButNotInOutput = 0
+	itemInTrainingButNotInOutput = 0
 	with open(trainingLoc) as f:
 		for line in f:
 			line = line.split()
 			user = line[0]
 			item = line[1]
-			if line[2] == '-1':
-				label = 0
-			else:
-				label = 1
+			label = line[2]
+
 			if not user in userItemIndex:
+				userInTrainingButNotInOutput += 1
 				continue
 			elif not item in userItemIndex[user]:
+				itemInTrainingButNotInOutput += 1
 				continue
 			else: #this user-item pair appears in our subalg result
 				userItemIndex[user][item][0] = label
 	print "Done with training file"
+	print "userInTrainingButNotInOutput: " + str(userInTrainingButNotInOutput)
+	print "itemInTrainingButNotInOutput: " + str(itemInTrainingButNotInOutput)
 	print "Total runtime: %s sec"%(time.time() - start)
 	f.close()
 
@@ -121,11 +157,9 @@ def runLogisticRegression():
 	print "Done with writing input file for logistic regression"
 	print "Total runtime: %s sec"%(time.time() - start)
 	f.close()
-	
-	#open final output file and run logistic regression
-	# itemItemFile = sc.textFile('subalg/item_item/output/item_item_results.txt')	#sc looks at dir of execution
-	# itemItemData = itemItemFile.map(parsePoint)
 
+	# start logistic regression	
+	print "Start Logistic Regression..."
 	lrInputFile = sc.textFile(currDir+"/output/input_for_lr.txt")
 	lrInputData = lrInputFile.map(parsePoint)
 
@@ -136,25 +170,45 @@ def runLogisticRegression():
 	weights = model.weights
 	w1 = float(weights[0])
 	w2 = float(weights[1])
+	w3 = float(weights[2])
+	print "Total runtime after Logistic Regression: %s sec"%(time.time() - start)
+
+	# For testing, look at the users that appear in test file only
+	print "Start looking at test data..."
+	testUsers = {} # users that appear in test data
+	with open(testLoc) as test:
+		for line in test:
+			line = line.split()
+			testUser = line[0]
+			if testUser not in testUsers:
+				testUsers[testUser] = 0
 
 	print "Start writing final output file"
+	skipperUsers = 0
 	with open(currDir+"/output/final_output.txt", 'w') as f:
 		for user in userItemIndex:
-			for item in userItemIndex[user]:
-				userItem = userItemIndex[user][item]
-				value = float(userItem[0])*w1 + float(userItem[1])*w2
-				userItem['value'] = value
-			# print userItemIndex[user].items()
-			userItemIndex[user] = sorted(userItemIndex[user].items(),
-				key = lambda x: x[1]['value'], reverse=True)[:3]
-			# write to file
-			f.write(user)
-			for i in userItemIndex[user]:
-				f.write(" "+i[0])
-			f.write("\n")
+			if user not in testUsers:
+				skipperUsers += 1
+				continue
+			else: # only generate recommendation list for users in test dataset
+				for item in userItemIndex[user]:
+					userItem = userItemIndex[user][item]
+					value = float(userItem[1])*w1 + float(userItem[2])*w2 + float(userItem[3])*w3
+					userItem['value'] = value
+				userItemIndex[user] = sorted(userItemIndex[user].items(),
+					key = lambda x: x[1]['value'], reverse=True)[:3]
+				# write to file
+				f.write(user)
+				for i in userItemIndex[user]:
+					f.write(" "+i[0])
+				f.write("\n")
 	print "Done with writing final output"
+	print "Skipped Users: " + str(skipperUsers)
+	print "w1 = " + str(w1) + "w2 = " + str(w2) + "w3 = " + str(w3)
+	print "Total runtime: %s sec"%(time.time() - start)
 	f.close()
 	userItemIndex = None
+	testUsers = None
 	gc.collect()
 #run
 # runLogisticRegression()
