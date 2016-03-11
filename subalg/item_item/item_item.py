@@ -1,6 +1,9 @@
 from pyspark.mllib.fpm import FPGrowth #for frequent pattern mining
+from pyspark.mllib.feature import Normalizer #normalize data ratings
 import gc
+import os
 import time
+import math
 
 ''''
 Module that will compute a list of user-most likely to follow
@@ -110,7 +113,9 @@ def applyUserActionWeights(sim10List, numActionsOnSimilarItem):
 
 	ret = {}	#to return
 	for tup in sim10List:
-		ret[tup[0]] = tup[1]*numActionsOnSimilarItem  #itemID:newValue
+		if not numActionsOnSimilarItem:	#if num actions is 0
+			numActionsOnSimilarItem = 1
+		ret[tup[0]] = tup[1]*(math.log(numActionsOnSimilarItem, 10)+0.25)  #itemID:newValue
 
 	return ret
 
@@ -126,6 +131,35 @@ def filterAlreadyFollowed(user, items):
 
 	for item in toRemove:
 		del items[item]
+
+def normalizeData(sc, fileToNormalize="subalg/item_item/output/item_item_results_unnormalized.txt", 
+	fileToCreate="subalg/item_item/output/item_item_results.txt"):
+	'''Normalizes values in a subalg output file and normalizes the values'''
+
+
+	def parseLine(line):
+		'''Inner helper for getting just the rating value'''
+		return float(line.split(' ')[2]) 	#just the ratings
+
+	n2 = Normalizer()
+	finalOutputFile = currDir+fileToCreate
+	ratings = sc.textFile(fileToNormalize).map(parseLine)
+	#rdd = sc.parallelize(ratings,2)
+	results = n2.transform(ratings.collect())
+
+	#open to read and write simaltaneously, update the weights
+	i = 0
+	with open(fileToNormalize) as f:
+		with open(fileToCreate, "a+") as fToCreate:
+
+			#for each line in file to norm
+			for line in f:
+				line = line.split()
+				fToCreate.write(line[0] + " " + line[1] + " " + str(results[i])+"\n")
+				i+=1
+
+	os.remove('subalg/item_item/output/item_item_results_unnormalized.txt')
+
 
 def generateCandidatesWithWeights(sc):
 	'''
@@ -185,7 +219,7 @@ def generateCandidatesWithWeights(sc):
 	#last thing, sort each resultant entry in sharedKeywordsIndex, limit to up to top 10 for memory efficiency
 	for entry in sharedKeywordsIndex:
 		sharedKeywordsIndex[entry] = sorted(sharedKeywordsIndex[entry].items(), 
-			key=lambda x: x[1], reverse=True)[:10]
+			key=lambda x: x[1], reverse=True)[:2]
 
 	print "Finished Candidate Generation, took %s secs"%(time.time()-start)
 
@@ -212,11 +246,11 @@ def generateCandidatesWithWeights(sc):
 	countSkipped = 0
 
 	#apply weights to sharedKeywordsIndex based on number of user actions (simply multiplying)
-	with open(currDir+"/output/item_item_results.txt", 'a+') as f:
+	with open(currDir+"/output/item_item_results_unnormalized.txt", 'a+') as f:
 		for user in userActionIndex:
 			followsSorted = sorted(userActionIndex[user].items(),
 				key=lambda x: x[1], reverse=True)
-			followsSorted = followsSorted[:2]	#only look up to top 2 interested items, limits return to up to 20 per user
+			followsSorted = followsSorted[:2]	#only look up to top 2 interested items, limits return to up to 2*^ per user
 			if not len(followsSorted):
 				countSkipped+=1
 			#for each tuple, get 10 most similar items, and apply interest weight to get rating
@@ -225,16 +259,17 @@ def generateCandidatesWithWeights(sc):
 					countSkipped+=1
 					continue
 
-				tenMostSimilar = sharedKeywordsIndex[tup[0]]
-				top10WithRatings = applyUserActionWeights(tenMostSimilar, tup[1])
-				filterAlreadyFollowed(user, top10WithRatings)
+				topMostSimilar = sharedKeywordsIndex[tup[0]]
+				topWithRatings = applyUserActionWeights(topMostSimilar, tup[1])
+				filterAlreadyFollowed(user, topWithRatings)
 
 				#instead of merging and storing in memory, write results to disk
-				if not len(top10WithRatings):
+				if not len(topWithRatings):
 					countSkipped+=1
 
-				for item in top10WithRatings:
-					f.write(user+" "+item+" "+str(top10WithRatings[item])+"\n")
+				for item in topWithRatings:
+					if topWithRatings[item] > 0:
+						f.write(user+" "+item+" "+str(topWithRatings[item])+"\n")
 
 
 
@@ -245,4 +280,9 @@ def generateCandidatesWithWeights(sc):
 	gc.collect()			
 
 	print "Skipped %s items - no other items in same category or no actions"%(countSkipped)
+	print "Current runtime: %s sec"%(time.time() - start)
+
+	print "Normalizing data - Last step..."
+	normalizeData(sc)
+
 	print "Total runtime: %s sec"%(time.time() - start)
