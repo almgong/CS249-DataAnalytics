@@ -111,11 +111,18 @@ def getNumOrPropShared(list1, list2, returnNum=False):
 def applyUserActionWeights(sim10List, numActionsOnSimilarItem):
 	'''Applies weights of number of actions onto expected tuples'''
 
+
+	def func(x):
+		''''applys x to 1/(1+e^-x) and returns it, assures [0,1]'''
+
+		return (1/(1+math.exp(-1*x)))
+
+
 	ret = {}	#to return
 	for tup in sim10List:
 		if not numActionsOnSimilarItem:	#if num actions is 0
 			numActionsOnSimilarItem = 1
-		ret[tup[0]] = tup[1]*(math.log(numActionsOnSimilarItem, 10)+0.25)  #itemID:newValue
+		ret[tup[0]] = (tup[1] + (func(numActionsOnSimilarItem)))/2.0  #itemID:newValue
 
 	return ret
 
@@ -142,7 +149,6 @@ def normalizeData(sc, fileToNormalize="subalg/item_item/output/item_item_results
 		return float(line.split(' ')[2]) 	#just the ratings
 
 	n2 = Normalizer()
-	finalOutputFile = currDir+fileToCreate
 	ratings = sc.textFile(fileToNormalize).map(parseLine)
 	#rdd = sc.parallelize(ratings,2)
 	results = n2.transform(ratings.collect())
@@ -158,7 +164,7 @@ def normalizeData(sc, fileToNormalize="subalg/item_item/output/item_item_results
 				fToCreate.write(line[0] + " " + line[1] + " " + str(results[i])+"\n")
 				i+=1
 
-	os.remove('subalg/item_item/output/item_item_results_unnormalized.txt')
+	#os.remove('subalg/item_item/output/item_item_results_unnormalized.txt')
 
 
 def generateCandidatesWithWeights(sc):
@@ -282,7 +288,7 @@ def generateCandidatesWithWeights(sc):
 	print "Skipped %s items - no other items in same category or no actions"%(countSkipped)
 	print "Current runtime: %s sec"%(time.time() - start)
 
-	print "Normalizing data - Last step..."
-	normalizeData(sc)
+	print "Normalizing data - Last step...jk"
+	#normalizeData(sc)
 
 	print "Total runtime: %s sec"%(time.time() - start)
