@@ -6,7 +6,7 @@ from pyspark.mllib.linalg import Vectors
 from pyspark.mllib.feature import Normalizer
 
 # train to build CF model with full info (user, product, following)
-file_train1 = "subalg/user_item/train1.txt"
+file_train1 = "data/train1.txt"
 
 # predict result of train data (user, product) with model
 file_train2 = "data/train2.txt"
@@ -28,4 +28,4 @@ def generateCandidatesWithWeights(sc):
 	test_data = test.map(lambda x: (x[0], x[1]))
 	#predictions are the input for logistic regression model
 	predictions = model.predictAll(test_data).map(lambda r: (r[0],r[1],r[2]))
-	predictions.coalesce(1, True).saveAsTextFile("subalg/user_item/output/user_item_results.txt")
+	predictions.coalesce(1, True).saveAsTextFile("subalg/user_item/output")
