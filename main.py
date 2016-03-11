@@ -64,8 +64,8 @@ user_user.generateCandidatesWithWeights()
 gc.collect()
 
 print "\nStarting user-item logic"
-results_user_item = user_item.generateCandidatesWithWeights(sc)
-print results_user_item
+user_item.generateCandidatesWithWeights(sc)
+gc.collect()
 
 print "\nStarting item-item logic"
 item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
