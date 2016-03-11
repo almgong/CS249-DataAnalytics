@@ -252,7 +252,7 @@ def generateCandidatesWithWeights(sc):
 	countSkipped = 0
 
 	#apply weights to sharedKeywordsIndex based on number of user actions (simply multiplying)
-	with open(currDir+"/output/item_item_results_unnormalized.txt", 'a+') as f:
+	with open(currDir+"/output/item_item_results.txt", 'a+') as f:
 		for user in userActionIndex:
 			followsSorted = sorted(userActionIndex[user].items(),
 				key=lambda x: x[1], reverse=True)
