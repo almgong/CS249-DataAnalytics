@@ -7,6 +7,7 @@ from subalg.item_item import item_item
 from subalg.user_item import user_item
 from logistic_regression import lr
 import evaluation
+from shutil import move
 
 import gc
 import os #for deleting temp files
@@ -22,7 +23,9 @@ start = time.time()
 print "Preprocessing..."
 print "Splitting training file..."
 execfile('splitTrainFile.py')
-
+os.rename("data/train1/part-00000","data/train1.txt")
+os.rename("data/train2/part-00000","data/train2.txt")
+os.rename("data/train3/part-00000","data/train3.txt")
 
 ### Main logic, run 3 sub algorithms ###
 print "Runing main logic"
@@ -60,7 +63,6 @@ except:
 	print "Something went wrong with removing temporary files, you may need to manually delete them."
 
 print "Exiting spark..."
-
 
 
 
