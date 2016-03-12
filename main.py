@@ -7,7 +7,6 @@ from subalg.item_item import item_item
 from subalg.user_item import user_item
 from logistic_regression import lr
 import evaluation
-from shutil import move
 
 import gc
 import os #for deleting temp files
@@ -39,7 +38,6 @@ print "\nStarting user-item logic"
 user_item.generateCandidatesWithWeights(sc)
 gc.collect()
 os.rename("subalg/user_item/output/part-00000","subalg/user_item/output/user_item_results.txt")
-os.rename("subalg/user_item/test/part-00000","subalg/user_item/output/test_user_item_results.txt")
 
 print "\nStarting item-item logic"
 item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
