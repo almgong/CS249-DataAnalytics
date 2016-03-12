@@ -25,7 +25,8 @@ print "Splitting training file..."
 execfile('splitTrainFile.py')
 os.rename("data/train1/part-00000","data/train1.txt")
 os.rename("data/train2/part-00000","data/train2.txt")
-os.rename("data/train3/part-00000","data/train3.txt")
+
+#os.rename("data/train3/part-00000","data/train3.txt")
 
 ### Main logic, run 3 sub algorithms ###
 print "Runing main logic"
@@ -38,6 +39,7 @@ print "\nStarting user-item logic"
 user_item.generateCandidatesWithWeights(sc)
 gc.collect()
 os.rename("subalg/user_item/output/part-00000","subalg/user_item/output/user_item_results.txt")
+os.rename("subalg/user_item/test/part-00000","subalg/user_item/output/test_user_item_results.txt")
 
 print "\nStarting item-item logic"
 item_item.generateCandidatesWithWeights(sc) #pass in sc, expects a file to have been writter
@@ -64,6 +66,5 @@ except:
 	print "Something went wrong with removing temporary files, you may need to manually delete them."
 
 print "Exiting spark..."
-
 
 
