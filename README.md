@@ -11,7 +11,8 @@ Some requirements:
 Python must be installed.
 The numpy python module must be installed.
 Access to a command line is necesary.
-
+It is assumed that the source code for our project has been unzipped in some
+directory of your choosing.
 
 ############# 
 ## 1. From scratch - WARNING, can take up to 3 hours.
@@ -28,7 +29,7 @@ of your choosing. The rest of the steps assume you have downloaded the prebuilt 
 
 4. Extract the track1.zip/track1.7z (either one) and also rec_log_test.txt.7z
 
-5. Locate in our source code the file named "main.py", this should be in the current 
+5. Locate in our source code the file named "main.py", this should be in the root
 directory once you unzip OUR project source code. This will be our reference point from now on.
 
 6. In the current directory (the one with main.py in it), locate the data/ directory and copy
