@@ -87,9 +87,9 @@ and store in a directory of your choosing.
 	A. Using the directory that main.py is (in our source code, it should be at the top level),
 	locate the directory: subalg/item_item/output - place item_item_results.txt there.
 
-	B. Similarly, locate subalg/user_user/output and place user_user_results_100.txt there.
+	B. Similarly, locate the directory subalg/user_user/output and place user_user_results_100.txt there.
 
-	C. Locate subalg/user_item/output and place user_item_results.txt there.
+	C. Locate the directory subalg/user_item/output and place user_item_results.txt there.
 
 6. Now you are ready to run logistic regression! Go back to your terminal where
 Spark is running.
