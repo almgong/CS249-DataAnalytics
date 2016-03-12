@@ -1,13 +1,13 @@
 #Class project for CS249
 #Please follow the below directions to run our project implementation. To speed
 up runtime of our code, we have provided files necessary on DropBox. You can 
-choose to either (1.) run the code from scratch (may take ~ 2 hours and requres
+choose to either (1.) run the code from scratch (may take ~ 2-3 hours and requres
 no downloading from our DropBox links) OR (2.) you can follow the alternative 
-method (labeled (2.)) and download and place the required output files to only 
+method (labeled (2.)) and download and place the required output files to  
 run logistic regression and get the evaluation results much faster.
 
 Some requirements:
-~10gb of free hard disk space (don't worry, our code deletes our temporary files).
+~10gb of free hard disk space (including the KDD Track1 data).
 Python must be installed.
 The numpy python module must be installed.
 Access to a command line is necesary.
@@ -80,7 +80,7 @@ follow the Alternative steps, below.
 3. From this webpage, confirm that see a collection of .txt files, such as
 item_item_results.txt, user_user_results_100.txt, and user_item_results.txt.
 
-4. Download item_item_results.txt, user_user_results_100.txt, and user_item_results.txt
+4. Download item_item_results.txt, user_user_results.txt, and user_item_results.txt
 and store in a directory of your choosing.
 
 5. Now we just need to move these files into their correct locations:
